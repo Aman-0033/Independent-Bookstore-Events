@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Production-grade SaaS portal for scheduling, managing, and browsing Independent Bookstore community events.">
+  <title>Independent Bookstore Events</title>
+  <style>
+    /* ==========================================================================
+       1. EXECUTIVE SAAS DESIGN TOKENS
+       ========================================================================== */
+    :root {
+      /* Monochromatic Corporate Grayscale */
+      --bg-base: #f8f9fa;
+      --bg-surface: #ffffff;
+      --bg-subtle: #f1f3f5;
+      --text-main: #111827;
+      --text-secondary: #4b5563;
+      --text-muted: #6b7280;
+      --border-subtle: #e5e7eb;
+      --border-focus: #111827;
+      --action-primary: #111827;
+      --action-hover: #1f2937;
+      
+      /* Sole Allowed Exception: Standard Validation Error Red */
+      --error: #dc3545;
+      --error-bg: #fff5f5;
+
+      /* Spacing Scale */
+      --space-8: 8px;
+      --space-16: 16px;
+      --space-32: 32px;
+
+      /* Geometry & Elevation */
+      --radius-md: 8px;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
+      /* Typography & Micro-interactions */
+      --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --transition-smooth: 0.3s ease;
+      --focus-ring: 2px solid #111827;
+      --focus-offset: 2px;
+    }
+
+    /* ==========================================================================
+       2. RESET & FOUNDATIONAL ACCESSIBILITY
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-stack);
+      font-size: 1rem;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Skip to Main Content */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: var(--space-16);
+      background: var(--action-primary);
+      color: var(--bg-surface);
+      padding: var(--space-8) var(--space-16);
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      text-decoration: none;
+      z-index: 1000;
+      transition: top var(--transition-smooth);
+    }
+
+    .skip-link:focus {
+      top: var(--space-16);
+      outline: var(--focus-ring);
+      outline-offset: var(--focus-offset);
+    }
+
+    /* Focus Rings */
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: var(--focus-ring);
+      outline-offset: var(--focus-offset);
+    }
+
+    /* ==========================================================================
+       3. APPLICATION HEADER
+       ========================================================================== */
+    .app-header {
+      background-color: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: clamp(var(--space-16), 4vw, var(--space-32)) var(--space-16);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: var(--space-8);
+    }
+
+    .header-title {
+      font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      color: var(--text-main);
+    }
+
+    .header-desc {
+      color: var(--text-secondary);
+      margin-top: var(--space-8);
+      font-size: 0.9375rem;
+      max-width: 680px;
+    }
+
+    /* ==========================================================================
+       4. FLUID TWO-COLUMN GRID LAYOUT
+       ========================================================================== */
+    .app-main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: clamp(var(--space-16), 4vw, var(--space-32)) var(--space-16);
+    }
+
+    .layout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--space-32);
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .layout-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-32);
+      }
+    }
+
+    /* ==========================================================================
+       5. SAAS CARDS & PANELS
+       ========================================================================== */
+    .panel {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: clamp(var(--space-16), 3vw, var(--space-32));
+      transition: box-shadow var(--transition-smooth);
+    }
+
+    .panel:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .panel-header {
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: var(--space-16);
+      margin-bottom: var(--space-32);
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .panel-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-top: var(--space-8);
+    }
+
+    /* ==========================================================================
+       6. FORM CONTROLS & ANIMATED ERROR STATES
+       ========================================================================== */
+    .event-form {
+      transition: opacity var(--transition-smooth);
+    }
+
+    .event-form.is-loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .form-group {
+      margin-bottom: var(--space-32);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: var(--space-8);
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .req-indicator {
+      color: var(--error);
+      margin-left: 4px;
+      font-weight: 700;
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      padding: var(--space-16);
+      font-family: inherit;
+      font-size: 0.9375rem;
+      color: var(--text-main);
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      transition: border-color var(--transition-smooth), background-color var(--transition-smooth), box-shadow var(--transition-smooth);
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 1px var(--border-focus);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Validation State with Smooth Sliding Error */
+    .form-group.has-error .form-input,
+    .form-group.has-error .form-textarea {
+      border-color: var(--error);
+      background-color: var(--error-bg);
+      box-shadow: 0 0 0 1px var(--error);
+    }
+
+    .form-error {
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-4px);
+      overflow: hidden;
+      color: var(--error);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      line-height: 1.4;
+      transition: max-height var(--transition-smooth), opacity var(--transition-smooth), transform var(--transition-smooth), margin-top var(--transition-smooth);
+    }
+
+    .form-group.has-error .form-error {
+      max-height: 48px;
+      opacity: 1;
+      transform: translateY(0);
+      margin-top: var(--space-8);
+    }
+
+    /* ==========================================================================
+       7. SUBMIT BUTTON & INLINE SVG SPINNER
+       ========================================================================== */
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: var(--space-16) var(--space-32);
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--bg-surface);
+      background-color: var(--action-primary);
+      border: 1px solid var(--action-primary);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: background-color var(--transition-smooth), transform var(--transition-smooth), box-shadow var(--transition-smooth), opacity var(--transition-smooth);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background-color: var(--action-hover);
+      border-color: var(--action-hover);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      cursor: not-allowed;
+      opacity: 0.8;
+      background-color: var(--action-hover);
+    }
+
+    /* Animated SVG Spinner */
+    .btn-spinner {
+      display: none;
+      width: 18px;
+      height: 18px;
+      margin-right: var(--space-8);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .btn-submit[aria-busy="true"] .btn-spinner {
+      display: inline-block;
+    }
+
+    /* ==========================================================================
+       8. DYNAMIC FEED & EVENT CARDS
+       ========================================================================== */
+    .events-feed {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-16);
+    }
+
+    .event-card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      padding: var(--space-16);
+      transition: transform var(--transition-smooth), box-shadow var(--transition-smooth), border-color var(--transition-smooth);
+    }
+
+    .event-card:hover {
+      border-color: var(--border-focus);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-8);
+      margin-bottom: var(--space-8);
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    .card-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      background-color: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .card-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* ==========================================================================
+       9. EMPTY STATE COMPONENT (WITH CUSTOM SVG ICON)
+       ========================================================================== */
+    .empty-state {
+      padding: var(--space-32);
+      text-align: center;
+      background-color: var(--bg-subtle);
+      border: 1px dashed var(--border-subtle);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .empty-icon-svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--text-muted);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      margin-bottom: var(--space-16);
+    }
+
+    .empty-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: var(--space-8);
+    }
+
+    .empty-text {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    /* ==========================================================================
+       10. APP FOOTER
+       ========================================================================== */
+    .app-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: var(--space-32) var(--space-16);
+      margin-top: var(--space-32);
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <!-- Accessible Skip Link -->
+  <a href="#mainContent" class="skip-link">Skip to main content</a>
+
+  <!-- Header -->
+  <header class="app-header" role="banner">
+    <div class="header-inner">
+      <p class="header-eyebrow">Athenaeum Books &amp; Press</p>
+      <h1 class="header-title">Independent Bookstore Events</h1>
+      <p class="header-desc">Enterprise scheduling dashboard for community readings, literary discussions, and author signings.</p>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout -->
+  <main class="app-main" id="mainContent" role="main">
+    <div class="layout-grid">
+
+      <!-- Column 1: Add Event Form -->
+      <section class="panel" aria-labelledby="formHeading">
+        <div class="panel-header">
+          <h2 id="formHeading" class="panel-title">Add Event</h2>
+          <p class="panel-subtitle">Publish a new gathering to the live public bookstore register.</p>
+        </div>
+
+        <form id="eventForm" class="event-form" novalidate>
+          <!-- Field 1: Event Name -->
+          <div class="form-group" id="groupName">
+            <label for="eventName" class="form-label">
+              Event Name <span class="req-indicator" aria-hidden="true">*</span>
+            </label>
+            <input
+              type="text"
+              id="eventName"
+              name="eventName"
+              class="form-input"
+              required
+              aria-required="true"
+              aria-describedby="errorName"
+              placeholder="e.g., An Evening with Pulitzer Winner"
+              autocomplete="off"
+            >
+            <span id="errorName" class="form-error" role="alert">Event name is required.</span>
+          </div>
+
+          <!-- Field 2: Date & Time -->
+          <div class="form-group" id="groupDate">
+            <label for="eventDate" class="form-label">
+              Date &amp; Time <span class="req-indicator" aria-hidden="true">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              id="eventDate"
+              name="eventDate"
+              class="form-input"
+              required
+              aria-required="true"
+              aria-describedby="errorDate"
+            >
+            <span id="errorDate" class="form-error" role="alert">Please select a valid date and time.</span>
+          </div>
+
+          <!-- Field 3: Description -->
+          <div class="form-group" id="groupDesc">
+            <label for="eventDesc" class="form-label">
+              Description <span class="req-indicator" aria-hidden="true">*</span>
+            </label>
+            <textarea
+              id="eventDesc"
+              name="eventDesc"
+              class="form-textarea"
+              required
+              aria-required="true"
+              aria-describedby="errorDesc"
+              placeholder="Outline event agenda, featured books, ticket notes, and author bio..."
+            ></textarea>
+            <span id="errorDesc" class="form-error" role="alert">Event description is required.</span>
+          </div>
+
+          <!-- Submit Button with Custom Inline SVG Spinner -->
+          <button
+            type="submit"
+            id="submitBtn"
+            class="btn-submit"
+            aria-busy="false"
+          >
+            <!-- Custom Animated SVG Spinner -->
+            <svg class="btn-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="rgba(255, 255, 255, 0.25)" stroke-width="3"></circle>
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="#ffffff" stroke-width="3" stroke-linecap="round"></path>
+            </svg>
+            <span id="submitBtnText">Schedule Event</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Column 2: Scheduled Events Feed -->
+      <section class="panel" aria-labelledby="feedHeading">
+        <div class="panel-header">
+          <h2 id="feedHeading" class="panel-title">Scheduled Events</h2>
+          <p class="panel-subtitle">Instant reverse-chronological event schedule.</p>
+        </div>
+
+        <!-- Live ARIA Container -->
+        <div
+          id="eventFeed"
+          class="events-feed"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <!-- Dynamically populated or empty state rendered via EventManager -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="app-footer" role="contentinfo">
+    <p>&copy; Athenaeum Independent Bookstore. All state updates encapsulated in local memory.</p>
+  </footer>
+
+  <!-- ==========================================================================
+       SENIOR-LEVEL CODE ARCHITECTURE (ES6 EventManager Class)
+       ========================================================================== -->
+  <script>
+    /**
+     * EventManager
+     * Encapsulates all application state, event handlers, DOM bindings,
+     * input sanitization, and UI rendering for the Independent Bookstore Events Page.
+     */
+    class EventManager {
+      /**
+       * Constructs the EventManager instance and caches DOM node queries.
+       */
+      constructor() {
+        /** @private @type {Array<{id: string, name: string, dateTime: string, description: string, createdAt: number}>} */
+        this.events = [];
+
+        /** @private */
+        this.dom = {
+          form: document.getElementById('eventForm'),
+          inputName: document.getElementById('eventName'),
+          inputDate: document.getElementById('eventDate'),
+          inputDesc: document.getElementById('eventDesc'),
+          submitBtn: document.getElementById('submitBtn'),
+          submitBtnText: document.getElementById('submitBtnText'),
+          feed: document.getElementById('eventFeed'),
+          groups: {
+            name: document.getElementById('groupName'),
+            date: document.getElementById('groupDate'),
+            desc: document.getElementById('groupDesc')
+          }
+        };
+
+        this.init();
+      }
+
+      /**
+       * Strict initialization lifecycle method.
+       * Attaches listeners and performs first paint.
+       */
+      init() {
+        this.bindEvents();
+        this.render();
+      }
+
+      /**
+       * Binds all DOM event handlers with preserved lexical context.
+       */
+      bindEvents() {
+        this.dom.form.addEventListener('submit', (e) => this.handleFormSubmit(e));
+
+        // Real-time error dismissal on user input
+        this.dom.inputName.addEventListener('input', () => {
+          if (this.dom.inputName.value.trim().length > 0) {
+            this.setFieldError('name', false);
+          }
+        });
+
+        this.dom.inputDate.addEventListener('input', () => {
+          if (this.dom.inputDate.value.trim().length > 0) {
+            this.setFieldError('date', false);
+          }
+        });
+
+        this.dom.inputDesc.addEventListener('input', () => {
+          if (this.dom.inputDesc.value.trim().length > 0) {
+            this.setFieldError('desc', false);
+          }
+        });
+      }
+
+      /**
+       * Strict XSS Defense: Sanitizes raw strings via native textContent mapping.
+       * Completely strips executable HTML/scripts without reliance on external libraries.
+       * @param {string} rawString
+       * @returns {string}
+       */
+      sanitize(rawString) {
+        if (typeof rawString !== 'string') return '';
+        const wrapper = document.createElement('div');
+        wrapper.textContent = rawString.trim();
+        return wrapper.textContent;
+      }
+
+      /**
+       * Formats an ISO string into an executive corporate timestamp.
+       * @param {string} dateString
+       * @returns {string}
+       */
+      formatDateTime(dateString) {
+        try {
+          const parsed = new Date(dateString);
+          if (isNaN(parsed.getTime())) return dateString;
+          return new Intl.DateTimeFormat(undefined, {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          }).format(parsed);
+        } catch (_) {
+          return dateString;
+        }
+      }
+
+      /**
+       * Toggles field visual and ARIA error states.
+       * @param {'name' | 'date' | 'desc'} fieldKey
+       * @param {boolean} isInvalid
+       */
+      setFieldError(fieldKey, isInvalid) {
+        const group = this.dom.groups[fieldKey];
+        const inputMap = {
+          name: this.dom.inputName,
+          date: this.dom.inputDate,
+          desc: this.dom.inputDesc
+        };
+        const input = inputMap[fieldKey];
+
+        if (!group || !input) return;
+
+        if (isInvalid) {
+          group.classList.add('has-error');
+          input.setAttribute('aria-invalid', 'true');
+        } else {
+          group.classList.remove('has-error');
+          input.setAttribute('aria-invalid', 'false');
+        }
+      }
+
+      /**
+       * Intercepts form submission, fires telemetry, validates, and simulates network latency.
+       * @param {SubmitEvent} e
+       */
+      handleFormSubmit(e) {
+        e.preventDefault();
+
+        // NFR 3: Mandatory Telemetry
+        console.log('[Analytics] User interacted with Independent Bookstore Events Page');
+
+        const rawName = this.dom.inputName.value.trim();
+        const rawDate = this.dom.inputDate.value.trim();
+        const rawDesc = this.dom.inputDesc.value.trim();
+
+        let firstInvalid = null;
+
+        // Field 1: Name
+        if (!rawName) {
+          this.setFieldError('name', true);
+          if (!firstInvalid) firstInvalid = this.dom.inputName;
+        } else {
+          this.setFieldError('name', false);
+        }
+
+        // Field 2: Date
+        if (!rawDate) {
+          this.setFieldError('date', true);
+          if (!firstInvalid) firstInvalid = this.dom.inputDate;
+        } else {
+          this.setFieldError('date', false);
+        }
+
+        // Field 3: Description
+        if (!rawDesc) {
+          this.setFieldError('desc', true);
+          if (!firstInvalid) firstInvalid = this.dom.inputDesc;
+        } else {
+          this.setFieldError('desc', false);
+        }
+
+        // Accessibility requirement: Focus the first invalid control
+        if (firstInvalid) {
+          firstInvalid.focus();
+          return;
+        }
+
+        // Network latency simulation (1500ms)
+        this.simulateNetworkSubmission({
+          name: this.sanitize(rawName),
+          dateTime: this.sanitize(rawDate),
+          description: this.sanitize(rawDesc)
+        });
+      }
+
+      /**
+       * Simulates network latency with visual form dimming and loading button states.
+       * @param {{name: string, dateTime: string, description: string}} cleanPayload
+       */
+      simulateNetworkSubmission(cleanPayload) {
+        this.dom.submitBtn.disabled = true;
+        this.dom.submitBtn.setAttribute('aria-busy', 'true');
+        this.dom.submitBtnText.textContent = 'Scheduling...';
+        this.dom.form.classList.add('is-loading');
+
+        setTimeout(() => {
+          // Add event to local state array in reverse-chronological order
+          this.events.unshift({
+            id: 'evt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8),
+            name: cleanPayload.name,
+            dateTime: cleanPayload.dateTime,
+            description: cleanPayload.description,
+            createdAt: Date.now()
+          });
+
+          // Reset Form & Clear States
+          this.dom.form.reset();
+          this.setFieldError('name', false);
+          this.setFieldError('date', false);
+          this.setFieldError('desc', false);
+
+          this.dom.submitBtn.disabled = false;
+          this.dom.submitBtn.setAttribute('aria-busy', 'false');
+          this.dom.submitBtnText.textContent = 'Schedule Event';
+          this.dom.form.classList.remove('is-loading');
+
+          // Render updated feed
+          this.render();
+        }, 1500);
+      }
+
+      /**
+       * Renders the event list or the polished empty state.
+       */
+      render() {
+        // Clear children without innerHTML vulnerability
+        while (this.dom.feed.firstChild) {
+          this.dom.feed.removeChild(this.dom.feed.firstChild);
+        }
+
+        // Edge Case 1: Empty State with Custom SVG Icon
+        if (this.events.length === 0) {
+          const emptyState = document.createElement('div');
+          emptyState.className = 'empty-state';
+          emptyState.setAttribute('role', 'status');
+
+          // Custom Inline SVG Icon (Calendar / Book)
+          const svgNS = 'http://www.w3.org/2000/svg';
+          const svg = document.createElementNS(svgNS, 'svg');
+          svg.setAttribute('class', 'empty-icon-svg');
+          svg.setAttribute('viewBox', '0 0 24 24');
+          svg.setAttribute('aria-hidden', 'true');
+
+          const rect = document.createElementNS(svgNS, 'rect');
+          rect.setAttribute('x', '3');
+          rect.setAttribute('y', '4');
+          rect.setAttribute('width', '18');
+          rect.setAttribute('height', '18');
+          rect.setAttribute('rx', '2');
+          rect.setAttribute('ry', '2');
+
+          const path1 = document.createElementNS(svgNS, 'line');
+          path1.setAttribute('x1', '16');
+          path1.setAttribute('y1', '2');
+          path1.setAttribute('x2', '16');
+          path1.setAttribute('y2', '6');
+
+          const path2 = document.createElementNS(svgNS, 'line');
+          path2.setAttribute('x1', '8');
+          path2.setAttribute('y1', '2');
+          path2.setAttribute('x2', '8');
+          path2.setAttribute('y2', '6');
+
+          const path3 = document.createElementNS(svgNS, 'line');
+          path3.setAttribute('x1', '3');
+          path3.setAttribute('y1', '10');
+          path3.setAttribute('x2', '21');
+          path3.setAttribute('y2', '10');
+
+          svg.appendChild(rect);
+          svg.appendChild(path1);
+          svg.appendChild(path2);
+          svg.appendChild(path3);
+
+          const title = document.createElement('h3');
+          title.className = 'empty-title';
+          title.textContent = 'No events scheduled';
+
+          const text = document.createElement('p');
+          text.className = 'empty-text';
+          text.textContent = 'Fill out the form on the left to schedule book signings, author lectures, and community poetry readings.';
+
+          emptyState.appendChild(svg);
+          emptyState.appendChild(title);
+          emptyState.appendChild(text);
+          this.dom.feed.appendChild(emptyState);
+          return;
+        }
+
+        // Happy Path: Reverse-chronological event list
+        this.events.forEach((evt) => {
+          const card = document.createElement('article');
+          card.className = 'event-card';
+          card.setAttribute('aria-label', evt.name);
+
+          // Card Header
+          const cardTop = document.createElement('div');
+          cardTop.className = 'card-top';
+
+          const heading = document.createElement('h3');
+          heading.className = 'card-title';
+          heading.textContent = evt.name;
+
+          const timeBadge = document.createElement('time');
+          timeBadge.className = 'card-badge';
+          timeBadge.dateTime = evt.dateTime;
+          timeBadge.textContent = this.formatDateTime(evt.dateTime);
+
+          cardTop.appendChild(heading);
+          cardTop.appendChild(timeBadge);
+          card.appendChild(cardTop);
+
+          // Description Paragraph
+          const desc = document.createElement('p');
+          desc.className = 'card-desc';
+          desc.textContent = evt.description;
+          card.appendChild(desc);
+
+          this.dom.feed.appendChild(card);
+        });
+      }
+    }
+
+    // Initialize application when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      new EventManager();
+    });
+  </script>
+</body>
+</html>
